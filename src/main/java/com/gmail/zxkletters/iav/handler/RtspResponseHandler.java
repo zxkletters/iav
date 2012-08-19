@@ -20,6 +20,6 @@ import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
 public class RtspResponseHandler extends SimpleChannelUpstreamHandler {
 
     public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) throws Exception {
-        System.out.println(e.getMessage());
+        System.out.println("======  receive response  ====== \n" + e.getMessage());
     }
 }

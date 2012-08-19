@@ -16,7 +16,7 @@ import org.jboss.netty.channel.ChannelPipelineFactory;
 import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioServerSocketChannelFactory;
 import org.jboss.netty.handler.codec.rtsp.RtspRequestDecoder;
-import org.jboss.netty.handler.codec.rtsp.RtspRequestEncoder;
+import org.jboss.netty.handler.codec.rtsp.RtspResponseEncoder;
 
 import com.gmail.zxkletters.iav.handler.RtspRequestHandler;
 
@@ -39,9 +39,9 @@ public class IavServer {
             @Override
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline p = Channels.pipeline();
-                p.addLast("encoder", new RtspRequestEncoder());
+                p.addLast("encoder", new RtspResponseEncoder());
                 p.addLast("decoder", new RtspRequestDecoder());
-                p.addLast("myHandler", new RtspRequestHandler());
+                p.addLast("requestHandler", new RtspRequestHandler());
                 return p;
             }
 

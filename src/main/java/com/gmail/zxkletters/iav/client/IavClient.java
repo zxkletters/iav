@@ -19,6 +19,7 @@ import org.jboss.netty.channel.Channels;
 import org.jboss.netty.channel.socket.nio.NioClientSocketChannelFactory;
 import org.jboss.netty.handler.codec.http.DefaultHttpRequest;
 import org.jboss.netty.handler.codec.http.HttpRequest;
+import org.jboss.netty.handler.codec.rtsp.RtspHeaders;
 import org.jboss.netty.handler.codec.rtsp.RtspMethods;
 import org.jboss.netty.handler.codec.rtsp.RtspRequestEncoder;
 import org.jboss.netty.handler.codec.rtsp.RtspResponseDecoder;
@@ -41,8 +42,8 @@ public class IavClient {
             @Override
             public ChannelPipeline getPipeline() throws Exception {
                 ChannelPipeline p = Channels.pipeline();
-                p.addLast("encoder", new RtspRequestEncoder());
                 p.addLast("decoder", new RtspResponseDecoder());
+                p.addLast("encoder", new RtspRequestEncoder());
                 p.addLast("responseHandler", new RtspResponseHandler());
                 return p;
             }
@@ -52,12 +53,100 @@ public class IavClient {
         ChannelFuture channelFutrue = clientBootstrap.connect(new InetSocketAddress(17467));
         if (channelFutrue.isSuccess()) {
             Channel channel = channelFutrue.getChannel();
-            HttpRequest request = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.DESCRIBE,
-                                                         "rtsp://localhost:17467/vedio");
-            ChannelFuture cf = channel.write(request);
-            if (cf.isSuccess()) {
-                System.out.println("send success!");
-            }
+
+            IavClient client = new IavClient();
+            HttpRequest request = client.buildSetupRequest();
+
+            channel.write(request);
         }
     }
+
+    /**
+     * build DESCRIBE request
+     * 
+     * @return
+     */
+    private HttpRequest buildDescribeRequest() {
+        HttpRequest request = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.DESCRIBE,
+                                                     "rtsp://localhost:17467/vedio");
+        request.setHeader(RtspHeaders.Names.CSEQ, 1);
+        request.addHeader(RtspHeaders.Names.ACCEPT, "application/sdp, application/rtsl, application/mheg");
+
+        return request;
+    }
+
+    /**
+     * build ANNOUNCE request
+     * 
+     * @return
+     */
+    private HttpRequest buildAnnounceRequest() {
+        HttpRequest request = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.ANNOUNCE,
+                                                     "rtsp://localhost:17467/vedio");
+        request.setHeader(RtspHeaders.Names.CSEQ, 2);
+        request.setHeader(RtspHeaders.Names.SESSION, 1234567);
+        request.addHeader(RtspHeaders.Names.CONTENT_TYPE, "application/sdp");
+        request.addHeader(RtspHeaders.Names.CONTENT_LENGTH, 123);
+        request.setContent(null);
+
+        return request;
+    }
+
+    /**
+     * build SETUP request
+     * 
+     * @return
+     */
+    private HttpRequest buildSetupRequest() {
+        HttpRequest request = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.SETUP,
+                                                     "rtsp://localhost:17467/vedio");
+        request.setHeader(RtspHeaders.Names.CSEQ, 3);
+        request.addHeader(RtspHeaders.Names.TRANSPORT, "RTP/AVP;unicast;client_port=4588-4589");
+
+        return request;
+    }
+
+    /**
+     * build PLAY request
+     * 
+     * @return
+     */
+    private HttpRequest buildPlayRequest() {
+        HttpRequest request = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.PLAY,
+                                                     "rtsp://localhost:17467/vedio");
+        request.setHeader(RtspHeaders.Names.CSEQ, 4);
+        request.setHeader(RtspHeaders.Names.SESSION, 1234567);
+        request.addHeader(RtspHeaders.Names.RANGE, "npt=10-15");
+
+        return request;
+    }
+
+    /**
+     * build PAUSE request
+     * 
+     * @return
+     */
+    private HttpRequest buildPauseRequest() {
+        HttpRequest request = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.PAUSE,
+                                                     "rtsp://localhost:17467/vedio");
+        request.setHeader(RtspHeaders.Names.CSEQ, 5);
+        request.setHeader(RtspHeaders.Names.SESSION, 1234567);
+
+        return request;
+    }
+
+    /**
+     * build TEARDOWN request
+     * 
+     * @return
+     */
+    private HttpRequest buildTeardownRequest() {
+        HttpRequest request = new DefaultHttpRequest(RtspVersions.RTSP_1_0, RtspMethods.TEARDOWN,
+                                                     "rtsp://localhost:17467/vedio");
+        request.setHeader(RtspHeaders.Names.CSEQ, 6);
+        request.setHeader(RtspHeaders.Names.SESSION, 1234567);
+
+        return request;
+    }
+
 }
